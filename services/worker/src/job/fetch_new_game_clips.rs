@@ -82,7 +82,12 @@ async fn once_(
     conf: Conf,
     game_ids: Vec<(twitch::models::GameId, Option<chrono::DateTime<Utc>>)>,
 ) -> Result<()> {
-    log::info!("Fetching new clips with {conf:?} for games {game_ids:?}");
+    if game_ids.is_empty() {
+        debug!("No games to fetch clips for, skipping job");
+        return Ok(());
+    } else {
+        info!("Fetching new clips with {conf:?} for games {game_ids:?}");
+    }
 
     let store_clips = spawn_channel_to_store_clips(db);
     // there'll be (at most) 1 request per game as pagination requires a request
@@ -281,10 +286,7 @@ fn spawn_task_to_fetch_clip(
                 }
 
                 if let Some(next_request) = cursor {
-                    debug!(
-                        "Fetched {clips_len} clips for {game_id} \
-                        and more are coming",
-                    );
+                    debug!("Fetched {clips_len} more clips for {game_id}");
 
                     if fetch_clips
                         .clone()
