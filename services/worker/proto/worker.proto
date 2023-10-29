@@ -15,7 +15,6 @@ service Worker {
   // No work is done for paused games.
   rpc SetIsGamePaused (SetIsGamePausedRequest) returns (google.protobuf.Empty) {}
   // Triggers a job to fetch new clips for the game instead of waiting for it.
-  // TODO: consider moving all cron to the admin.
   rpc TriggerFetchNewGameClips (TriggerFetchNewGameClipsRequest) returns (google.protobuf.Empty) {}
 
   // Utility method to reset the worker state.
