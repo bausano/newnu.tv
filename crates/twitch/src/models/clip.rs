@@ -45,9 +45,10 @@ pub struct InsertClipStatement<'a>(rusqlite::Statement<'a>);
 #[cfg(feature = "sqlite")]
 impl<'a> InsertClipStatement<'a> {
     pub fn new(db: &'a rusqlite::Connection) -> Result<Self, anyhow::Error> {
+        // replace will update view count
         let stmt = db.prepare(
             "
-            INSERT OR IGNORE INTO
+            INSERT OR REPLACE INTO
             clips(
                 id,
                 broadcaster_id,
