@@ -18,7 +18,6 @@ mod rpc {
 
 struct RpcWorker {
     g: AppState,
-    _jobs: job::Jobs,
 }
 
 #[tokio::main]
@@ -42,10 +41,8 @@ async fn main() -> AnyResult<()> {
         twitch: Arc::clone(&twitch),
     };
 
-    let jobs = job::schedule_all(g.clone()).await?;
-
     let addr = g.conf.rpc_addr;
-    let server = RpcWorker { g, _jobs: jobs };
+    let server = RpcWorker { g };
 
     Server::builder()
         .add_service(WorkerServer::new(server))

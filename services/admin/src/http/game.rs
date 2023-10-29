@@ -115,10 +115,15 @@ pub async fn trigger_fetch_clips_job(
     }
 
     let mut worker = s.worker.lock().await;
+    use worker::rpc::trigger_fetch_new_game_clips_request;
     worker
         .trigger_fetch_new_game_clips(
             worker::rpc::TriggerFetchNewGameClipsRequest {
-                game_id: game_id.to_string(),
+                game_id: Some(
+                    trigger_fetch_new_game_clips_request::GameId::Id(
+                        game_id.to_string(),
+                    ),
+                ),
                 recorded_at_most_hours_ago: at_most as i64,
                 recorded_at_least_hours_ago: at_least as i64,
             },

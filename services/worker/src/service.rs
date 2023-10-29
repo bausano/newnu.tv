@@ -55,27 +55,40 @@ impl Worker for RpcWorker {
             recorded_at_most_hours_ago,
             recorded_at_least_hours_ago,
         } = request.into_inner();
-        debug!("Trigger fetch new game clips for game {game_id}");
+
+        let conf = job::fetch_new_game_clips::Conf {
+            recorded_at_most_ago: if recorded_at_most_hours_ago == 0 {
+                None
+            } else {
+                Some(chrono::Duration::hours(recorded_at_most_hours_ago))
+            },
+            recorded_at_least_ago: if recorded_at_least_hours_ago == 0 {
+                None
+            } else {
+                Some(chrono::Duration::hours(recorded_at_least_hours_ago))
+            },
+        };
 
         let db = Arc::clone(&self.g.db);
         let tc = Arc::clone(&self.g.twitch);
-        tokio::spawn(job::fetch_new_game_clips::once(
-            db,
-            tc,
-            job::fetch_new_game_clips::Conf {
-                recorded_at_most_ago: if recorded_at_most_hours_ago == 0 {
-                    None
-                } else {
-                    Some(chrono::Duration::hours(recorded_at_most_hours_ago))
-                },
-                recorded_at_least_ago: if recorded_at_least_hours_ago == 0 {
-                    None
-                } else {
-                    Some(chrono::Duration::hours(recorded_at_least_hours_ago))
-                },
-            },
-            game_id.into(),
-        ));
+
+        if let Some(rpc::trigger_fetch_new_game_clips_request::GameId::Id(
+            game_id,
+        )) = game_id
+        {
+            debug!("Trigger fetch new game clips for game {game_id}");
+
+            tokio::spawn(job::fetch_new_game_clips::once(
+                db,
+                tc,
+                conf,
+                game_id.into(),
+            ));
+        } else {
+            debug!("Trigger fetch new game clips for all active games");
+
+            tokio::spawn(job::fetch_new_game_clips::once_for_all(db, tc, conf));
+        };
 
         Ok(Response::new(()))
     }

@@ -8,5 +8,5 @@ pub(crate) use crate::db;
 pub(crate) use crate::error::AppError;
 pub(crate) use crate::g;
 
-pub(crate) type Result<T> = std::result::Result<T, AppError>;
 pub(crate) type DbConn = rusqlite::Connection;
+pub(crate) type Result<T> = std::result::Result<T, AppError>;

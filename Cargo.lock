@@ -33,8 +33,10 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+ "tokio-cron-scheduler",
  "tonic",
  "twitch",
+ "uuid",
  "worker",
 ]
 
@@ -2327,9 +2329,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
- "tokio-cron-scheduler",
  "tonic",
  "tonic-build",
  "twitch",
- "uuid",
 ]

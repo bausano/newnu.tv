@@ -38,7 +38,10 @@ message SetIsGamePausedRequest {
 }
 
 message TriggerFetchNewGameClipsRequest {
-  string game_id = 1;
+  // If not present, we trigger this job for all games.
+  oneof game_id {
+    string id = 1;
+  }
   // Fetch clips at most this many hours old.
   int64 recorded_at_most_hours_ago = 2;
   // Fetch clips at least this many hours old.

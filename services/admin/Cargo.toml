@@ -16,7 +16,9 @@ rusqlite_migration.workspace = true
 rusqlite.workspace = true
 serde_json.workspace = true
 serde.workspace = true
+tokio-cron-scheduler = "0.9"
 tokio.workspace = true
 tonic.workspace = true
 twitch = { path = "../../crates/twitch", features = ["sqlite"] }
+uuid.workspace = true
 worker = { path = "../worker" }

@@ -9,6 +9,11 @@ use twitch::twitch_api2::types::Timestamp;
 
 use crate::prelude::*;
 
+/// Good default will have some hours because that allows for views to grow on
+/// clips before they are fetched.
+const HOW_LONG_UNTIL_CLIP_HAS_REASONABLE_VIEWS: Duration =
+    Duration::from_secs(8 * 3600);
+
 #[derive(Debug, Default)]
 pub struct Conf {
     /// Only clips newer than this will be fetched.
@@ -50,19 +55,22 @@ pub async fn once(
     once_(db, tc, conf, vec![(game_id, recorded_at)]).await
 }
 
-pub async fn once_for_all(db: DbLock, tc: Arc<twitch::Client>) -> Result<()> {
+pub async fn once_for_all(
+    db: DbLock,
+    tc: Arc<twitch::Client>,
+    conf: Conf,
+) -> Result<()> {
     let game_ids = {
         let db = db.lock().await;
         db::game::select_all_active_that_have_last_clip_older_than(
             &db,
-            chrono::Duration::hours(12), // TODO: load const from db
+            conf.recorded_at_least_ago.unwrap_or(
+                chrono::Duration::from_std(
+                    HOW_LONG_UNTIL_CLIP_HAS_REASONABLE_VIEWS,
+                )
+                .unwrap(),
+            ),
         )?
-    };
-
-    let conf = Conf {
-        // TODO: load const from db
-        recorded_at_least_ago: Some(chrono::Duration::hours(12)),
-        ..Default::default()
     };
 
     once_(db, tc, conf, game_ids).await

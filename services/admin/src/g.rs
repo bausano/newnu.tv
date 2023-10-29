@@ -1,3 +1,4 @@
+use crate::job::Jobs;
 use crate::prelude::*;
 use crate::views::Views;
 use std::sync::Arc;
@@ -10,4 +11,5 @@ pub struct HttpState {
     pub views: Views,
     pub worker: Arc<Mutex<worker::Client>>,
     pub twitch: Arc<twitch::Client>,
+    pub _jobs: Jobs,
 }

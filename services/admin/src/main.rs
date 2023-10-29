@@ -8,6 +8,8 @@ mod error;
 mod g;
 /// Sets up http server with router
 mod http;
+/// Cron job scheduling.
+mod job;
 /// Global imports of ubiquitous types
 mod prelude;
 /// Http templates with handlebars
@@ -26,17 +28,20 @@ async fn main() -> AnyResult<()> {
     info!("web admin starting");
 
     let conf = Conf::from_env()?;
-    let worker = conf.connect_lazy_worker_client().await?;
+    let worker = Arc::new(Mutex::new(conf.connect_lazy_worker_client().await?));
     let twitch = conf.construct_twitch_client().await?;
     let mut db = conf.open_db()?;
     db::up(&mut db)?;
 
+    let jobs = job::schedule_all(Arc::clone(&worker)).await?;
+
     let g = g::HttpState {
         conf: Arc::new(conf),
         db: Arc::new(Mutex::new(db)),
-        worker: Arc::new(Mutex::new(worker)),
+        worker,
         views: Views::new()?,
         twitch: Arc::new(twitch),
+        _jobs: jobs,
     };
 
     http::start(g).await?;
