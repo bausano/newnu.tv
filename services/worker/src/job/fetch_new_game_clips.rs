@@ -82,7 +82,7 @@ async fn once_(
     conf: Conf,
     game_ids: Vec<(twitch::models::GameId, Option<chrono::DateTime<Utc>>)>,
 ) -> Result<()> {
-    log::info!("Fetching new clips with conf {conf:?} for games {game_ids:?}");
+    log::info!("Fetching new clips with {conf:?} for games {game_ids:?}");
 
     let store_clips = spawn_channel_to_store_clips(db);
     // there'll be (at most) 1 request per game as pagination requires a request
@@ -158,7 +158,7 @@ async fn once_(
                 break 'outer;
             };
 
-            spawn_fetch_clip(Arc::clone(&tc), store_clips.clone(), el);
+            spawn_task_to_fetch_clip(Arc::clone(&tc), store_clips.clone(), el);
         }
 
         // if it was more than 1s, this immediately resolves
@@ -256,7 +256,7 @@ fn spawn_channel_to_store_clips(
 /// The difference between the new paginated request is only the cursor.
 ///
 /// Any fetched clips will be sent down the channel to store them in db.
-fn spawn_fetch_clip(
+fn spawn_task_to_fetch_clip(
     tc: Arc<twitch::Client>,
     channel_to_store_clips: UnboundedSender<twitch::models::Clip>,
     el: QueueElement,
@@ -270,6 +270,10 @@ fn spawn_fetch_clip(
     tokio::spawn(async move {
         match tc.get_clips_paginated(request.clone()).await {
             Ok((clips, cursor)) => {
+                let clips_len = clips.len();
+                let game_id =
+                    request.game_id.expect("Game ID is always present");
+
                 for clip in clips {
                     if channel_to_store_clips.send(clip).is_err() {
                         error!("Failed to send clip to store, channel closed");
@@ -277,6 +281,11 @@ fn spawn_fetch_clip(
                 }
 
                 if let Some(next_request) = cursor {
+                    debug!(
+                        "Fetched {clips_len} clips for {game_id} \
+                        and more are coming",
+                    );
+
                     if fetch_clips
                         .clone()
                         .send(QueueElement {
@@ -289,6 +298,8 @@ fn spawn_fetch_clip(
                     {
                         error!("Main channel closed, cannot send next page");
                     }
+                } else {
+                    debug!("Fetched last {clips_len} clips for {game_id}",);
                 }
             }
             Err(e) if e.to_string().contains("409") => {
