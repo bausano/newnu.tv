@@ -9,4 +9,5 @@ pub(crate) use crate::error::AppError;
 pub(crate) use crate::g;
 
 pub(crate) type DbConn = rusqlite::Connection;
+pub(crate) type DbLock = std::sync::Arc<tokio::sync::Mutex<DbConn>>;
 pub(crate) type Result<T> = std::result::Result<T, AppError>;

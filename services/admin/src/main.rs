@@ -32,12 +32,13 @@ async fn main() -> AnyResult<()> {
     let twitch = conf.construct_twitch_client().await?;
     let mut db = conf.open_db()?;
     db::up(&mut db)?;
+    let db = Arc::new(Mutex::new(db));
 
-    let jobs = job::schedule_all(Arc::clone(&worker)).await?;
+    let jobs = job::schedule_all(Arc::clone(&db), Arc::clone(&worker)).await?;
 
     let g = g::HttpState {
         conf: Arc::new(conf),
-        db: Arc::new(Mutex::new(db)),
+        db,
         worker,
         views: Views::new()?,
         twitch: Arc::new(twitch),

@@ -4,6 +4,7 @@ use hyper::StatusCode;
 use serde::Serialize;
 use serde_json::json;
 use std::borrow::Cow;
+use std::error::Error as StdError;
 
 #[derive(Debug)]
 pub struct AppError {
@@ -122,3 +123,14 @@ impl From<rusqlite::Error> for AppError {
         }
     }
 }
+
+impl std::fmt::Display for AppError {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> StdResult<(), std::fmt::Error> {
+        write!(f, "{}", self.message)
+    }
+}
+
+impl StdError for AppError {}

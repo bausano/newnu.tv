@@ -1,0 +1,56 @@
+{{#*inline "page"}}
+
+<p>
+    <a href="/">Home</a> | Settings
+</p>
+<hr>
+
+<h2>Settings</h2>
+
+<h3><code>fetch_new_game_clips_cron</code></h3>
+<p>
+
+    Cron expression which controls how often to fetch new game clips.
+    This changes the frequency of triggering a job.
+    <br>
+    Restart the app to apply changes.
+
+    <pre>
+        format:    sec    min   hour   day of month   month   day of week   year
+        actual:    {{settings.fetch_new_game_clips_cron}}
+    </pre>
+
+    <form action="/settings/put" method="post">
+        <textarea
+            name="fetch-new-game-clips-cron"
+            id="fetch-new-game-clips-cron"
+            cols="50"
+        >{{settings.fetch_new_game_clips_cron}}</textarea>
+
+        <button>Save</button>
+    </form>
+</p>
+
+<h3><code>recorded_at_least_hours_ago</code></h3>
+<p>
+    We only store clips which are <b>at least</b>
+    <code>{{settings.recorded_at_least_hours_ago}}</code> hours old.
+    After this time, the clips will have presumably accumulated some views.
+    We use clip views as a metric to rank clips.
+    <br>
+    Restart the app to apply changes.
+
+    <form action="/settings/put" method="post">
+        <input
+            type="number"
+            name="recorded-at-least-hours-ago"
+            id="recorded-at-least-hours-ago"
+            value="{{settings.recorded_at_least_hours_ago}}"
+        >
+
+        <button>Save</button>
+    </form>
+</p>
+
+{{/inline}}
+{{> (lookup this "parent")}}

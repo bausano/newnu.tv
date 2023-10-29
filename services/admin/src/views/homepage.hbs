@@ -1,11 +1,5 @@
 {{#*inline "page"}}
 
-<h2>Add a game</h2>
-<form action="/search/game" method="get">
-    <input type="text" name="q" placeholder="what's the name?">
-    <button>Search for matches</button>
-</form>
-
 <h2>Games</h2>
 <div>
     {{#each games as |game|}}
@@ -20,10 +14,16 @@
     {{/each}}
 </div>
 
+<h3>Add a new one</h3>
+<form action="/search/game" method="get">
+    <input type="text" name="q" placeholder="what's the game?">
+    <button>Search for matches</button>
+</form>
+
 <h2 style="color: red">Danger zone</h2>
 <p>
     <form
-        action="/dev/reset"
+        action="/dev/reset/post"
         method="post"
         onsubmit="return confirm('This will delete everything, continue?')"
     >
@@ -31,6 +31,10 @@
             Hard delete of all data
         </button>
     </form>
+</p>
+
+<p>
+    View and edit settings <a href="/settings">here</a>.
 </p>
 
 {{/inline}}

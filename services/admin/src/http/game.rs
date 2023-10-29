@@ -108,7 +108,7 @@ pub async fn trigger_fetch_clips_job(
         recorded_at_least_hours_ago: at_least,
     } = body;
 
-    if at_most <= at_least {
+    if at_most != 0 && at_most <= at_least {
         return Err(AppError::bad_request(
             "Recorded 'at most' must be greater than to 'at least'",
         ));

@@ -13,7 +13,6 @@ pub struct Views {
 impl Views {
     pub fn new() -> AnyResult<Self> {
         let mut h = Handlebars::new();
-        h.set_dev_mode(true); // TODO
         h.set_strict_mode(false);
 
         // contains the head imports
@@ -30,6 +29,11 @@ impl Views {
         )?;
 
         h.register_template_string("game", include_str!("views/game.hbs"))?;
+
+        h.register_template_string(
+            "settings",
+            include_str!("views/settings.hbs"),
+        )?;
 
         Ok(Self {
             handlebars: Arc::new(h),
@@ -68,6 +72,30 @@ impl Views {
 
         self.handlebars
             .render("game", &json!({ "parent": "base", "game": game }))
+            .map(Html)
+            .map_err(From::from)
+    }
+
+    /// View global settings.
+    pub fn settings(&self, db: &DbConn) -> Result<Html<String>> {
+        let fetch_new_game_clips_cron =
+            db::setting::fetch_new_game_clips_cron(db)?;
+        let recorded_at_least_hours_ago =
+            db::setting::recorded_at_least_hours_ago(db)?;
+
+        self.handlebars
+            .render(
+                "settings",
+                &json!(
+                    {
+                        "parent": "base",
+                        "settings": {
+                            "fetch_new_game_clips_cron": fetch_new_game_clips_cron,
+                            "recorded_at_least_hours_ago": recorded_at_least_hours_ago,
+                        }
+                    }
+                ),
+            )
             .map(Html)
             .map_err(From::from)
     }

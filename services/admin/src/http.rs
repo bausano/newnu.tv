@@ -1,9 +1,11 @@
-// homepage
-mod home;
-// endpoints for game management
-mod game;
-// endpoints which ease development
+/// endpoints which ease development
 mod dev;
+/// endpoints for game management
+mod game;
+/// homepage
+mod home;
+/// endpoints for global settings
+mod settings;
 
 use crate::prelude::*;
 use axum::{
@@ -55,7 +57,9 @@ fn routes() -> Router<g::HttpState> {
         .route("/game/:game_id/pause/post", post(game::pause))
         .route("/game/:game_id/pause/delete", post(game::resume))
         .route("/search/game", get(game::search))
-        .route("/dev/reset", post(dev::reset))
+        .route("/dev/reset/post", post(dev::reset))
+        .route("/settings", get(settings::show))
+        .route("/settings/put", post(settings::edit))
         .fallback(handler_404);
 
     debug!("Http routes constructed");

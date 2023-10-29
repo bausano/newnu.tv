@@ -6,9 +6,9 @@
 </p>
 <hr>
 
-<h1>
+<h2>
     {{game.name}}
-</h1>
+</h2>
 
 <p>
     <img
@@ -35,7 +35,7 @@
     {{/if}}
 </p>
 
-<h2>Fetch clips</h2>
+<h3>Fetch clips</h3>
 <p>
     A periodic job checks Twitch APIs for new clips for every unpaused game.
     However, the job has some defaults on how often it runs and how old/fresh
@@ -79,7 +79,7 @@
 
 {{!-- TODO: list clips --}}
 
-<h2 style="color: red">Danger zone</h2>
+<h3 style="color: red">Danger zone</h3>
 <p>
     <form
         action="/game/{{game.id}}/delete"
