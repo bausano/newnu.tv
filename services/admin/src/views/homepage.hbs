@@ -1,0 +1,37 @@
+{{#*inline "page"}}
+
+<h2>Add a game</h2>
+<form action="/search/game" method="get">
+    <input type="text" name="q" placeholder="what's the name?">
+    <button>Search for matches</button>
+</form>
+
+<h2>Games</h2>
+<div>
+    {{#each games as |game|}}
+        <a href="/game/{{game.id}}">
+            <img
+                width="156"
+                src="{{game.box_art_url}}"
+                alt="Thumbnail"
+                {{#if game.is_paused}} style="filter: brightness(30%);" {{/if}}
+            >
+        </a>
+    {{/each}}
+</div>
+
+<h2 style="color: red">Danger zone</h2>
+<p>
+    <form
+        action="/dev/reset"
+        method="post"
+        onsubmit="return confirm('This will delete everything, continue?')"
+    >
+        <button>
+            Hard delete of all data
+        </button>
+    </form>
+</p>
+
+{{/inline}}
+{{> (lookup this "parent")}}

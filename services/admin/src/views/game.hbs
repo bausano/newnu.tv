@@ -1,0 +1,96 @@
+{{#*inline "page"}}
+<link rel="icon" type="image/x-icon" href="{{game.box_art_url}}">
+
+<p>
+    <a href="/">Home</a> | Game
+</p>
+<hr>
+
+<h1>
+    {{game.name}}
+</h1>
+
+<p>
+    <img
+        src="{{game.box_art_url}}"
+        alt="Thumbnail"
+        width="64"
+        align="right"
+        {{#if game.is_paused}} style="filter: brightness(50%);" {{/if}}
+    >
+
+    <i>{{game.name}}</i> is {{#unless game.is_paused}}not{{/unless}} paused.
+    When paused, the app will not automatically fetch any new content nor will
+    it process any existing content after it's done with any eventually
+    currently running operations.
+
+    {{#if game.is_paused}}
+        <form action="/game/{{game.id}}/pause/delete" method="post">
+            <button type="submit">Resume processing</button>
+        </form>
+    {{else}}
+        <form action="/game/{{game.id}}/pause/post" method="post">
+            <button>Pause processing</button>
+        </form>
+    {{/if}}
+</p>
+
+<h2>Fetch clips</h2>
+<p>
+    A periodic job checks Twitch APIs for new clips for every unpaused game.
+    However, the job has some defaults on how often it runs and how old/fresh
+    clips it stores.
+
+    You can trigger this job manually here to avoid waiting, to fetch clips
+    in custom time range or to fetch clips for a paused game.
+
+    <form action="/game/{{game.id}}/job/fetch_clips" method="post">
+        <label for="recorded-at-most-hours-ago">
+            Select clips recorded <i>at most</i> this many hours ago.
+            If you want to continue from the oldest clip in <i>newnu.tv</i>
+            database then set this to 0 (recommended).
+        </label>
+        Newer than <input
+            type="number"
+            name="recorded-at-most-hours-ago"
+            id="recorded-at-most-hours-ago"
+            max="168"
+            {{!-- TODO: populate with actual defaults --}}
+            value="0"
+        > hours
+
+        <label for="recorded-at-least-hours-ago">
+            Select clips recorded <i>at least</i> this many hours ago.
+            Must be greater than above.
+            A good value is 8 hours, because then the clip will have accumulated
+            enough views for the rest of the system to determine its value.
+        </label>
+        Older than <input
+            type="number"
+            name="recorded-at-least-hours-ago"
+            id="recorded-at-least-hours-ago"
+            min="1"
+            max="168"
+        > hours
+
+        <br>
+        <button type="submit">Trigger</button>
+    </form>
+</p>
+
+{{!-- TODO: list clips --}}
+
+<h2 style="color: red">Danger zone</h2>
+<p>
+    <form
+        action="/game/{{game.id}}/delete"
+        method="post"
+        onsubmit="return confirm('Delete {{game.name}} from database?')"
+    >
+        <button>
+            Hard delete
+        </button>
+    </form>
+</p>
+{{/inline}}
+{{> (lookup this "parent")}}

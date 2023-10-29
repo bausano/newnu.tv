@@ -1,0 +1,22 @@
+[package]
+name = "admin"
+version.workspace = true
+edition.workspace = true
+
+
+[dependencies]
+anyhow.workspace = true
+axum = { version = "0.6", features = ["headers"] }
+dotenvy.workspace = true
+handlebars = "4.4"
+hyper.workspace = true
+log.workspace = true
+pretty_env_logger.workspace = true
+rusqlite_migration.workspace = true
+rusqlite.workspace = true
+serde_json.workspace = true
+serde.workspace = true
+tokio.workspace = true
+tonic.workspace = true
+twitch = { path = "../../crates/twitch", features = ["sqlite"] }
+worker = { path = "../worker" }
