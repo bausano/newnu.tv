@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package worker;
+
+service Worker {
+  // Inserts given game to the database.
+  // By default it's paused, call SetIsGamePaused to unpause it.
+  rpc AddGame (AddGameRequest) returns (google.protobuf.Empty) {}
+  // Remove game from the database for ever.
+  // Dangerous, prefer to pause it.
+  rpc DeleteGame (DeleteGameRequest) returns (google.protobuf.Empty) {}
+  // Pauses or unpauses the game.
+  // No work is done for paused games.
+  rpc SetIsGamePaused (SetIsGamePausedRequest) returns (google.protobuf.Empty) {}
+  // Triggers a job to fetch new clips for the game instead of waiting for it.
+  // TODO: consider moving all cron to the admin.
+  rpc BeginFetchNewGameClips (BeginFetchNewGameClipsRequest) returns (google.protobuf.Empty) {}
+
+  // Utility method to reset the worker state.
+  // Runs all down and then up migrations.
+  rpc DevReset(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}
+
+message AddGameRequest {
+  string game_id = 1;
+  string game_name = 2;
+}
+
+message DeleteGameRequest {
+  string game_id = 1;
+}
+
+message SetIsGamePausedRequest {
+  string game_id = 1;
+  bool is_paused = 2;
+}
+
+message BeginFetchNewGameClipsRequest {
+  string game_id = 1;
+  // Fetch clips at most this many hours old.
+  int64 recorded_at_most_hours_ago = 2;
+  // Fetch clips at least this many hours old.
+  int64 recorded_at_least_hours_ago = 3;
+}
