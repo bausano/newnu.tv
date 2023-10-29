@@ -35,6 +35,8 @@ impl Views {
             include_str!("views/settings.hbs"),
         )?;
 
+        h.register_template_string("clips", include_str!("views/clips.hbs"))?;
+
         Ok(Self {
             handlebars: Arc::new(h),
         })
@@ -95,6 +97,29 @@ impl Views {
                         }
                     }
                 ),
+            )
+            .map(Html)
+            .map_err(From::from)
+    }
+
+    pub fn clips(
+        &self,
+        db: &DbConn,
+        game_id: &GameId,
+        total_count: usize,
+        clips: Vec<worker::models::clip::Clip>,
+    ) -> Result<Html<String>> {
+        let game = db::game::select_by_id(db, game_id)?;
+
+        self.handlebars
+            .render(
+                "clips",
+                &json!({
+                    "parent": "base",
+                    "game": game,
+                    "total_count": total_count,
+                    "clips": clips,
+                }),
             )
             .map(Html)
             .map_err(From::from)

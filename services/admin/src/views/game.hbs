@@ -2,7 +2,7 @@
 <link rel="icon" type="image/x-icon" href="{{game.box_art_url}}">
 
 <p>
-    <a href="/">Home</a> | Game
+    <a href="/">Home</a> | {{game.name}}
 </p>
 <hr>
 
@@ -35,7 +35,11 @@
     {{/if}}
 </p>
 
-<h3>Fetch clips</h3>
+<h3>Clips</h3>
+<p>
+    <a href="/game/{{game.id}}/clips">Browse clips</a>
+</p>
+
 <p>
     A periodic job checks Twitch APIs for new clips for every unpaused game.
     However, the job has some defaults on how often it runs and how old/fresh
@@ -44,7 +48,7 @@
     You can trigger this job manually here to avoid waiting, to fetch clips
     in custom time range or to fetch clips for a paused game.
 
-    <form action="/game/{{game.id}}/job/fetch_clips" method="post">
+    <form action="/game/{{game.id}}/clips/fetch/post" method="post">
         <label for="recorded-at-most-hours-ago">
             Select clips recorded <i>at most</i> this many hours ago.
             If you want to continue from the oldest clip in <i>newnu.tv</i>
@@ -76,8 +80,6 @@
         <button type="submit">Trigger</button>
     </form>
 </p>
-
-{{!-- TODO: list clips --}}
 
 <h3 style="color: red">Danger zone</h3>
 <p>

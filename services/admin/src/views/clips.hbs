@@ -1,0 +1,67 @@
+{{#*inline "page"}}
+<link rel="icon" type="image/x-icon" href="{{game.box_art_url}}">
+
+<p>
+    <a href="/">Home</a> | <a href="/game/{{game_id}}">{{game.name}}</a> | Clips
+</p>
+<hr>
+
+<h2>Browse clips</h2>
+
+<p>
+    There are <b>{{total_count}}</b> clips in total matching the criteria.
+</p>
+
+<div class="listing">
+    <div class="item">
+        {{#each clips}}
+        <span>
+            <a href="{{url}}" target="_blank">
+                <img
+                    src="{{thumbnail_url}}"
+                    alt="{{title}}"
+                    title="{{title}}"
+                >
+            </a>
+            <small>{{broadcaster_name}} ({{view_count}})</small>
+        </span>
+        {{/each}}
+    </div>
+</div>
+
+<style>
+    .listing {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+
+    .item {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+
+    .item span {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0.5rem;
+    }
+
+    .item span img {
+        width: 250px;
+        margin-bottom: 0.5rem;
+    }
+
+    .item span small {
+        text-align: center;
+    }
+</style>
+
+<script type="text/javascript">
+    {{!-- TODO: query parameters --}}
+</script>
+
+{{/inline}}
+{{> (lookup this "parent")}}
