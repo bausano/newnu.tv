@@ -16,6 +16,8 @@ service Worker {
   rpc SetIsGamePaused (SetIsGamePausedRequest) returns (google.protobuf.Empty) {}
   // Triggers a job to fetch new clips for the game instead of waiting for it.
   rpc TriggerFetchNewGameClips (TriggerFetchNewGameClipsRequest) returns (google.protobuf.Empty) {}
+  // Listing clips for a game with pagination.
+  rpc ListClips (ListClipsRequest) returns (ListClipsResponse) {}
 
   // Utility method to reset the worker state.
   // Runs all down and then up migrations.
@@ -38,11 +40,54 @@ message SetIsGamePausedRequest {
 
 message TriggerFetchNewGameClipsRequest {
   // If not present, we trigger this job for all games.
-  oneof game_id {
-    string id = 1;
-  }
+  optional string game_id = 1;
   // Fetch clips at most this many hours old.
   int64 recorded_at_most_hours_ago = 2;
   // Fetch clips at least this many hours old.
   int64 recorded_at_least_hours_ago = 3;
+}
+
+message ListClipsRequest {
+  string game_id = 1;
+  // Translates to LIMIT
+  int64 page_size = 2;
+  // Translates to OFFSET
+  int64 page_offset = 3;
+  bool sort_direction_desc = 4;
+  // Filter by broadcaster name, case insensitive, exact match.
+  optional string broadcaster_name = 5;
+  // Filter by string contained in the title.
+  optional string title_like = 6;
+  // Zero, one or more langs to filter by.
+  repeated string langs = 7;
+  // See also `sort_direction_desc`
+  ListClipsSortOrder sort_order = 8;
+  // Bound view count by upper limit.
+  optional int64 view_count_max = 9;
+  // Bound view count by lower limit.
+  int64 view_count_min = 10;
+}
+enum ListClipsSortOrder {
+  RECORDED_AT = 0;
+  VIEW_COUNT = 1;
+}
+message ListClipsResponse {
+  int64 total_count = 1;
+  repeated Clip clips = 2;
+}
+message Clip {
+  string id = 1;
+  string broadcaster_id = 2;
+  string broadcaster_name = 3;
+  string creator_name = 4;
+  string recorded_at = 5;
+  int64 duration_secs = 6;
+  string title = 7;
+  string thumbnail_url = 8;
+  string url = 9;
+  int64 view_count = 10;
+  string lang = 11;
+  string game_id = 12;
+  string updated_at = 13;
+  string created_at = 14;
 }

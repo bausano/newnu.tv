@@ -72,10 +72,7 @@ impl Worker for RpcWorker {
         let db = Arc::clone(&self.g.db);
         let tc = Arc::clone(&self.g.twitch);
 
-        if let Some(rpc::trigger_fetch_new_game_clips_request::GameId::Id(
-            game_id,
-        )) = game_id
-        {
+        if let Some(game_id) = game_id {
             debug!("Trigger fetch new game clips for game {game_id}");
 
             tokio::spawn(job::fetch_new_game_clips::once(
@@ -91,6 +88,21 @@ impl Worker for RpcWorker {
         };
 
         Ok(Response::new(()))
+    }
+
+    async fn list_clips(
+        &self,
+        request: Request<rpc::ListClipsRequest>,
+    ) -> StdResult<Response<rpc::ListClipsResponse>, Status> {
+        debug!("List clips request {request:?}");
+
+        let db = self.g.db.lock().await;
+        let (total_count, clips) = db::clip::list(&db, request.into_inner())?;
+
+        Ok(Response::new(rpc::ListClipsResponse {
+            total_count: total_count as i64,
+            clips: clips.into_iter().map(From::from).collect(),
+        }))
     }
 
     async fn dev_reset(

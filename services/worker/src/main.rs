@@ -29,11 +29,7 @@ async fn main() -> AnyResult<()> {
 
     let conf = Conf::from_env()?;
     let twitch = Arc::new(conf.construct_twitch_client().await?);
-    let db = {
-        let mut db = rusqlite::Connection::open(conf.db_path())?;
-        db::up(&mut db)?;
-        Arc::new(Mutex::new(db))
-    };
+    let db = Arc::new(Mutex::new(db::open(conf.db_path())?));
 
     let g = AppState {
         db: Arc::clone(&db),

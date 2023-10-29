@@ -10,6 +10,7 @@ pub struct AppError {
 
 #[derive(Default, Debug, Serialize)]
 pub enum AppErrorKind {
+    BadRequest,
     AlreadyExists,
     NotFound,
     /// Internal server error.
@@ -41,6 +42,13 @@ impl AppError {
             kind: AppErrorKind::NotFound,
         }
     }
+
+    pub fn bad_request(message: impl Into<String>) -> Self {
+        Self {
+            message: message.into().into(),
+            kind: AppErrorKind::BadRequest,
+        }
+    }
 }
 
 impl From<AnyError> for AppError {
@@ -66,6 +74,7 @@ impl From<AppError> for tonic::Status {
         let code = match err.kind {
             AppErrorKind::AlreadyExists => tonic::Code::InvalidArgument,
             AppErrorKind::NotFound => tonic::Code::NotFound,
+            AppErrorKind::BadRequest => tonic::Code::InvalidArgument,
             AppErrorKind::Other => tonic::Code::Internal,
         };
 
