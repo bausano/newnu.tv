@@ -71,7 +71,7 @@ pub async fn delete(
     let db = s.db.lock().await;
     db::game::delete(&db, &game_id)?;
 
-    Ok(Redirect::to(&format!("/")))
+    Ok(Redirect::to("/"))
 }
 
 pub async fn pause(
@@ -94,16 +94,16 @@ pub async fn resume(
 
 #[derive(Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub struct BeginFetchClipsJob {
+pub struct TriggerFetchClipsJob {
     pub recorded_at_most_hours_ago: usize,
     pub recorded_at_least_hours_ago: usize,
 }
-pub async fn begin_fetch_clips_job(
+pub async fn trigger_fetch_clips_job(
     State(s): State<g::HttpState>,
     Path(game_id): Path<twitch::models::GameId>,
-    Form(body): Form<BeginFetchClipsJob>,
+    Form(body): Form<TriggerFetchClipsJob>,
 ) -> Result<Redirect> {
-    let BeginFetchClipsJob {
+    let TriggerFetchClipsJob {
         recorded_at_most_hours_ago: at_most,
         recorded_at_least_hours_ago: at_least,
     } = body;
@@ -116,8 +116,8 @@ pub async fn begin_fetch_clips_job(
 
     let mut worker = s.worker.lock().await;
     worker
-        .begin_fetch_new_game_clips(
-            worker::rpc::BeginFetchNewGameClipsRequest {
+        .trigger_fetch_new_game_clips(
+            worker::rpc::TriggerFetchNewGameClipsRequest {
                 game_id: game_id.to_string(),
                 recorded_at_most_hours_ago: at_most as i64,
                 recorded_at_least_hours_ago: at_least as i64,

@@ -48,7 +48,7 @@ fn routes() -> Router<g::HttpState> {
         .route("/game/:game_id", get(game::show))
         .route(
             "/game/:game_id/job/fetch_clips",
-            post(game::begin_fetch_clips_job),
+            post(game::trigger_fetch_clips_job),
         )
         .route("/game/:game_id/post", post(game::add))
         .route("/game/:game_id/delete", post(game::delete))

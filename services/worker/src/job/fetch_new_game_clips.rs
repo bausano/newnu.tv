@@ -219,12 +219,10 @@ fn spawn_channel_to_store_clips(
                             SLEEP_DURATION
                         })
                         .await;
-                    } else {
-                        if let Err(e) =
-                            store(&mut *db.lock().await, &mut buffer)
-                        {
-                            break Err(e);
-                        }
+                    } else if let Err(e) =
+                        store(&mut *db.lock().await, &mut buffer)
+                    {
+                        break Err(e);
                     }
                 }
                 Err(TryRecvError::Disconnected) => {

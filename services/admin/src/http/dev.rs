@@ -11,5 +11,5 @@ pub async fn reset(State(s): State<g::HttpState>) -> Result<Redirect> {
     db::down(&mut db)?;
     db::up(&mut db)?;
 
-    Ok(Redirect::to(&format!("/")))
+    Ok(Redirect::to("/"))
 }

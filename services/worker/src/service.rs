@@ -46,16 +46,16 @@ impl Worker for RpcWorker {
         Ok(Response::new(()))
     }
 
-    async fn begin_fetch_new_game_clips(
+    async fn trigger_fetch_new_game_clips(
         &self,
-        request: Request<rpc::BeginFetchNewGameClipsRequest>,
+        request: Request<rpc::TriggerFetchNewGameClipsRequest>,
     ) -> StdResult<Response<()>, Status> {
-        let rpc::BeginFetchNewGameClipsRequest {
+        let rpc::TriggerFetchNewGameClipsRequest {
             game_id,
             recorded_at_most_hours_ago,
             recorded_at_least_hours_ago,
         } = request.into_inner();
-        debug!("Begin fetch new game clips for game {game_id}");
+        debug!("Trigger fetch new game clips for game {game_id}");
 
         let db = Arc::clone(&self.g.db);
         let tc = Arc::clone(&self.g.twitch);

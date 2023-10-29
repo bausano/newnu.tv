@@ -16,7 +16,7 @@ service Worker {
   rpc SetIsGamePaused (SetIsGamePausedRequest) returns (google.protobuf.Empty) {}
   // Triggers a job to fetch new clips for the game instead of waiting for it.
   // TODO: consider moving all cron to the admin.
-  rpc BeginFetchNewGameClips (BeginFetchNewGameClipsRequest) returns (google.protobuf.Empty) {}
+  rpc TriggerFetchNewGameClips (TriggerFetchNewGameClipsRequest) returns (google.protobuf.Empty) {}
 
   // Utility method to reset the worker state.
   // Runs all down and then up migrations.
@@ -37,7 +37,7 @@ message SetIsGamePausedRequest {
   bool is_paused = 2;
 }
 
-message BeginFetchNewGameClipsRequest {
+message TriggerFetchNewGameClipsRequest {
   string game_id = 1;
   // Fetch clips at most this many hours old.
   int64 recorded_at_most_hours_ago = 2;
