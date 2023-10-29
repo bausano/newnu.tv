@@ -1,0 +1,19 @@
+[package]
+name = "twitch"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+log.workspace = true
+reqwest = "*"                                    # whichever version twitch api supports
+serde.workspace = true
+rusqlite = { optional = true, workspace = true }
+
+[dependencies.twitch_api2]
+version = "0.6"
+features = ["client", "helix", "twitch_oauth2", "reqwest", "time"]
+
+[features]
+default = ["sqlite"]
+sqlite = ["rusqlite"]
