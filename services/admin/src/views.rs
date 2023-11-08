@@ -138,6 +138,15 @@ mod helpers {
     use handlebars::{handlebars_helper, Handlebars};
     use serde_json::Value;
 
+    pub fn register_all(handlebars: &mut Handlebars<'_>) {
+        handlebars.register_helper("div", Box::new(div));
+        handlebars.register_helper("add", Box::new(add));
+        handlebars.register_helper("equals", Box::new(equals));
+        handlebars.register_helper("not", Box::new(not));
+        handlebars.register_helper("contains", Box::new(contains));
+        handlebars.register_helper("empty", Box::new(empty));
+    }
+
     handlebars_helper!(div: |a: usize, b: usize| a / b);
     handlebars_helper!(add: |a: usize, b: usize| a + b);
     handlebars_helper!(equals: |a: Value, b: Value| a == b);
@@ -157,13 +166,4 @@ mod helpers {
         Value::Null => true,
         _ => false,
     });
-
-    pub fn register_all(handlebars: &mut Handlebars<'_>) {
-        handlebars.register_helper("div", Box::new(div));
-        handlebars.register_helper("add", Box::new(add));
-        handlebars.register_helper("equals", Box::new(equals));
-        handlebars.register_helper("not", Box::new(not));
-        handlebars.register_helper("contains", Box::new(contains));
-        handlebars.register_helper("empty", Box::new(empty));
-    }
 }
