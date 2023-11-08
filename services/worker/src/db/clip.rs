@@ -2,25 +2,8 @@ use itertools::Itertools;
 use rusqlite::named_params;
 use std::{rc::Rc, time::Duration};
 
+use crate::models::clip::Clip;
 use crate::{prelude::*, rpc};
-
-#[derive(Debug)]
-pub struct Clip {
-    pub broadcaster_id: String,
-    pub broadcaster_name: String,
-    pub created_at: chrono::DateTime<chrono::Utc>,
-    pub creator_name: String,
-    pub duration: Duration,
-    pub game_id: String,
-    pub id: String,
-    pub lang: String,
-    pub recorded_at: chrono::DateTime<chrono::Utc>,
-    pub thumbnail_url: String,
-    pub title: String,
-    pub updated_at: chrono::DateTime<chrono::Utc>,
-    pub url: String,
-    pub view_count: usize,
-}
 
 pub fn list(
     db: &DbConn,
@@ -30,11 +13,11 @@ pub fn list(
         game_id,
         page_size,
         page_offset,
-        sort_direction_desc,
+        sort_direction_asc,
         broadcaster_name,
         title_like,
         langs,
-        sort_order,
+        sort_by,
         view_count_max,
         view_count_min,
     } = request;
@@ -45,17 +28,16 @@ pub fn list(
         ));
     }
 
-    let sort_order = {
-        let sort_order = rpc::ListClipsSortOrder::try_from(sort_order)
-            .map_err(|e| {
-                AppError::internal(format!("Invalid sort order: {e}"))
-            })?;
-        match sort_order {
-            rpc::ListClipsSortOrder::RecordedAt => "recorded_at",
-            rpc::ListClipsSortOrder::ViewCount => "view_count",
+    let sort_by = {
+        let sort_by = rpc::ListClipsSortBy::try_from(sort_by).map_err(|e| {
+            AppError::internal(format!("Invalid sort order: {e}"))
+        })?;
+        match sort_by {
+            rpc::ListClipsSortBy::RecordedAt => "recorded_at",
+            rpc::ListClipsSortBy::ViewCount => "view_count",
         }
     };
-    let sort_direction = if sort_direction_desc { "DESC" } else { "ASC" };
+    let sort_direction = if sort_direction_asc { "ASC" } else { "DESC" };
     // array feature of sqlite
     let langs = Rc::new(
         langs
@@ -103,7 +85,7 @@ pub fn list(
             view_count
         FROM clips
         {where_clause}
-        ORDER BY {sort_order} {sort_direction}
+        ORDER BY {sort_by} {sort_direction}
         LIMIT :page_size
         OFFSET :page_offset"
     );
@@ -187,8 +169,8 @@ mod tests {
             rpc::ListClipsRequest {
                 game_id: "55".to_string(),
                 page_size: 5,
-                sort_order: rpc::ListClipsSortOrder::RecordedAt as i32,
-                sort_direction_desc: false,
+                sort_by: rpc::ListClipsSortBy::RecordedAt as i32,
+                sort_direction_asc: true,
                 ..Default::default()
             },
         )?;
@@ -209,8 +191,8 @@ mod tests {
             rpc::ListClipsRequest {
                 game_id: "55".to_string(),
                 page_size: 1,
-                sort_order: rpc::ListClipsSortOrder::RecordedAt as i32,
-                sort_direction_desc: true,
+                sort_by: rpc::ListClipsSortBy::RecordedAt as i32,
+                sort_direction_asc: false,
                 ..Default::default()
             },
         )?;
@@ -230,8 +212,8 @@ mod tests {
             rpc::ListClipsRequest {
                 game_id: "55".to_string(),
                 page_size: 2,
-                sort_order: rpc::ListClipsSortOrder::ViewCount as i32,
-                sort_direction_desc: false,
+                sort_by: rpc::ListClipsSortBy::ViewCount as i32,
+                sort_direction_asc: true,
                 ..Default::default()
             },
         )?;
@@ -252,8 +234,8 @@ mod tests {
             rpc::ListClipsRequest {
                 game_id: "55".to_string(),
                 page_size: 2,
-                sort_order: rpc::ListClipsSortOrder::ViewCount as i32,
-                sort_direction_desc: true,
+                sort_by: rpc::ListClipsSortBy::ViewCount as i32,
+                sort_direction_asc: false,
                 view_count_max: Some(1500),
                 view_count_min: 500,
                 ..Default::default()
@@ -297,8 +279,8 @@ mod tests {
                 game_id: "55".to_string(),
                 page_size: 1,
                 page_offset: 1,
-                sort_order: rpc::ListClipsSortOrder::RecordedAt as i32,
-                sort_direction_desc: false,
+                sort_by: rpc::ListClipsSortBy::RecordedAt as i32,
+                sort_direction_asc: true,
                 ..Default::default()
             },
         )?;
@@ -362,6 +344,7 @@ mod tests {
                 game_id: "55".to_string(),
                 page_size: 2,
                 broadcaster_name: Some("Davaeorn".to_string()),
+                sort_direction_asc: true,
                 ..Default::default()
             },
         )?;

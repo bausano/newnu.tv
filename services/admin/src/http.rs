@@ -1,3 +1,5 @@
+/// endpoints for clips management
+mod clips;
 /// endpoints which ease development
 mod dev;
 /// endpoints for game management
@@ -47,19 +49,20 @@ fn routes() -> Router<g::HttpState> {
     // i'll take the latter any day of the week
     let app = Router::new()
         .route("/", get(home::page))
+        .route("/search/game", get(game::search))
         .route("/game/:game_id", get(game::show))
-        .route(
-            "/game/:game_id/job/fetch_clips",
-            post(game::trigger_fetch_clips_job),
-        )
         .route("/game/:game_id/post", post(game::add))
         .route("/game/:game_id/delete", post(game::delete))
         .route("/game/:game_id/pause/post", post(game::pause))
         .route("/game/:game_id/pause/delete", post(game::resume))
-        .route("/search/game", get(game::search))
-        .route("/dev/reset/post", post(dev::reset))
+        .route("/game/:game_id/clips", get(clips::show))
+        .route(
+            "/game/:game_id/clips/fetch/post",
+            post(clips::trigger_fetch),
+        )
         .route("/settings", get(settings::show))
         .route("/settings/put", post(settings::edit))
+        .route("/dev/reset/post", post(dev::reset))
         .fallback(handler_404);
 
     debug!("Http routes constructed");

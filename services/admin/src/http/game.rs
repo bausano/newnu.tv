@@ -1,9 +1,7 @@
 use axum::{
     extract::{Path, Query},
     response::{Html, Redirect},
-    Form,
 };
-use serde::Deserialize;
 use std::collections::HashMap;
 
 use crate::prelude::*;
@@ -88,42 +86,6 @@ pub async fn resume(
     Path(game_id): Path<twitch::models::GameId>,
 ) -> Result<Redirect> {
     set_is_paused(&s, game_id.clone(), false).await?;
-
-    Ok(Redirect::to(&format!("/game/{game_id}")))
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub struct TriggerFetchClipsJob {
-    pub recorded_at_most_hours_ago: usize,
-    pub recorded_at_least_hours_ago: usize,
-}
-pub async fn trigger_fetch_clips_job(
-    State(s): State<g::HttpState>,
-    Path(game_id): Path<twitch::models::GameId>,
-    Form(body): Form<TriggerFetchClipsJob>,
-) -> Result<Redirect> {
-    let TriggerFetchClipsJob {
-        recorded_at_most_hours_ago: at_most,
-        recorded_at_least_hours_ago: at_least,
-    } = body;
-
-    if at_most != 0 && at_most <= at_least {
-        return Err(AppError::bad_request(
-            "Recorded 'at most' must be greater than to 'at least'",
-        ));
-    }
-
-    let mut worker = s.worker.lock().await;
-    worker
-        .trigger_fetch_new_game_clips(
-            worker::rpc::TriggerFetchNewGameClipsRequest {
-                game_id: Some(game_id.to_string()),
-                recorded_at_most_hours_ago: at_most as i64,
-                recorded_at_least_hours_ago: at_least as i64,
-            },
-        )
-        .await?;
 
     Ok(Redirect::to(&format!("/game/{game_id}")))
 }

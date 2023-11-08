@@ -3,6 +3,8 @@ mod db;
 mod error;
 mod g;
 mod job;
+/// Models which are shared also by the admin interface.
+mod models;
 mod prelude;
 mod service;
 

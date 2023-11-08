@@ -53,21 +53,21 @@ message ListClipsRequest {
   int64 page_size = 2;
   // Translates to OFFSET
   int64 page_offset = 3;
-  bool sort_direction_desc = 4;
+  bool sort_direction_asc = 4;
   // Filter by broadcaster name, case insensitive, exact match.
   optional string broadcaster_name = 5;
   // Filter by string contained in the title.
   optional string title_like = 6;
   // Zero, one or more langs to filter by.
   repeated string langs = 7;
-  // See also `sort_direction_desc`
-  ListClipsSortOrder sort_order = 8;
+  // See also `sort_direction_asc`
+  ListClipsSortBy sort_by = 8;
   // Bound view count by upper limit.
   optional int64 view_count_max = 9;
   // Bound view count by lower limit.
   int64 view_count_min = 10;
 }
-enum ListClipsSortOrder {
+enum ListClipsSortBy {
   RECORDED_AT = 0;
   VIEW_COUNT = 1;
 }
