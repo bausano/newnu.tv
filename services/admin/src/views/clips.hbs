@@ -5,7 +5,7 @@ Available query parameters:
 - sort_direction_asc    (default: false)
 - broadcaster_name      (default: None)
 - title_like            (default: None)
-- langs
+- langs                 (default: all)
 - sort_by               (default: view_count)
 - view_count_max        (default: None)
 - view_count_min        (default: 0)
@@ -148,11 +148,8 @@ Available query parameters:
 </p>
 
 <script type="text/javascript">
-    // get the current URL, its query parameters and set page size to 50
     const url = new URL(window.location.href);
     const params = new URLSearchParams(url.search);
-
-    console.log({{query.page_offset}})
 
     function setPageSize(size) {
         params.set('page-size', size);
