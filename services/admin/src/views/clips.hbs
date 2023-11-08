@@ -1,16 +1,108 @@
+{{!--
+Available query parameters:
+- page_size             (default: 50)
+- page_offset           (default: 0)
+- sort_direction_asc    (default: false)
+- broadcaster_name      (default: None)
+- title_like            (default: None)
+- langs
+- sort_by               (default: view_count)
+- view_count_max        (default: None)
+- view_count_min        (default: 0)
+--}}
+
 {{#*inline "page"}}
 <link rel="icon" type="image/x-icon" href="{{game.box_art_url}}">
 
 <p>
-    <a href="/">Home</a> | <a href="/game/{{game_id}}">{{game.name}}</a> | Clips
+    <a href="/">Home</a> | <a href="/game/{{game.id}}">{{game.name}}</a> | Clips
 </p>
 <hr>
 
 <h2>Browse clips</h2>
 
 <p>
-    There are <b>{{total_count}}</b> clips in total matching the criteria.
+    Sort by
+    {{#if (equals "recorded_at" query.sort_by)}}
+        date / <a onclick="sortBy('view-count')">views</a>
+    {{else}}
+        <a onclick="sortBy('recorded-at')">date</a> / views
+    {{/if}}
+
+    {{#if query.sort_direction_asc}}
+        &nbsp;&uarr;&nbsp;
+        <a
+            title="Highest/latest first"
+            onclick="setSortDirectionAsc(false)"
+        >&nbsp;&darr;&nbsp;</a>
+    {{else}}
+        <a
+            title="Lowest/earliest first"
+            onclick="setSortDirectionAsc(true)"
+        >&nbsp;&uarr;&nbsp;</a>
+
+        &nbsp;&darr;&nbsp;
+    {{/if}}
 </p>
+
+<p>
+    There are <b>{{total_count}}</b> clips in total matching these criteria:
+</p>
+
+<ul>
+    <li>
+        <a
+            title="Clips with views less than and/or more will be filtered out."
+            onclick="clampViews()"
+        >Only clips with view count</a>
+        more than
+        <input
+            type="number"
+            id="min-views"
+            style="width: 64px;"
+            value="{{ query.view_count_min }}"
+        >
+        and/or less than
+        <input
+            type="number"
+            id="max-views"
+            style="width: 128px;"
+            value="{{ query.view_count_max }}"
+        >
+    </li>
+
+    <li>
+        <a
+            title="Looks for the given text in the title of the clip (case insensitive)"
+            onclick="searchTitle()"
+        >Search in title</a> for
+        <input
+            type="text"
+            id="title-like"
+            value="{{ query.title_like }}"
+        >
+    </li>
+
+    {{#if query.broadcaster_name }}
+    <li>
+        {{ query.broadcaster_name }}
+        <a
+            title="Cancel filter"
+            onclick="filterByBroadcaster('')"
+        >&#10060;</a>
+    </li>
+    {{/if}}
+
+    <li>
+        {{#if (contains query.langs "en")}}
+            en <a onclick="removeLangsFromFilter(['en', 'en-gb'])">&#10060;</a>
+        {{else}}
+            <a onclick="addLangsToFilter(['en', 'en-gb'])">en</a>
+        {{/if}}
+    </li>
+</ul>
+
+<hr>
 
 <div class="listing">
     <div class="item">
@@ -23,11 +115,140 @@
                     title="{{title}}"
                 >
             </a>
-            <small>{{broadcaster_name}} ({{view_count}})</small>
+            <small>
+                <a onclick="filterByBroadcaster('{{broadcaster_name}}')">
+                    {{broadcaster_name}}
+                </a>
+                    {{#if (equals view_count 1)}}
+                        &#40;1 view,
+                    {{else}}
+                        &#40;{{view_count}} views,
+                    {{/if}}
+                    {{duration.secs}}s&#41;
+            </small>
         </span>
         {{/each}}
     </div>
 </div>
+
+<hr>
+
+<p style="text-align: center;">
+    <a onclick="changePage(-5)">&nbsp;&nbsp;&laquo;&nbsp;&nbsp;</a>&nbsp;&nbsp;
+    <a onclick="changePage(-1)">&nbsp;&nbsp;&lsaquo;&nbsp;&nbsp;</a>&nbsp;&nbsp;
+    {{add (div query.page_offset query.page_size) 1}}&nbsp;&nbsp;
+    <a onclick="changePage(1)">&nbsp;&nbsp;&rsaquo;&nbsp;&nbsp;</a>&nbsp;&nbsp;
+    <a onclick="changePage(5)">&nbsp;&nbsp;&raquo;&nbsp;&nbsp;</a>
+
+    <br>
+    Page size
+    <a onclick="setPageSize(50)">50</a> |
+    <a onclick="setPageSize(100)">100</a> |
+    <a onclick="setPageSize(200)">200</a>
+</p>
+
+<script type="text/javascript">
+    // get the current URL, its query parameters and set page size to 50
+    const url = new URL(window.location.href);
+    const params = new URLSearchParams(url.search);
+
+    console.log({{query.page_offset}})
+
+    function setPageSize(size) {
+        params.set('page-size', size);
+        window.location.search = params.toString();
+        return false;
+    }
+
+    function changePage(pageOffset) {
+        const newOffset = Math.max(
+            {{query.page_offset}} + pageOffset * {{query.page_size}}, 0
+        );
+        params.set('page-offset', newOffset);
+        window.location.search = params.toString();
+        return false;
+    }
+
+    function sortBy(sortBy) {
+        params.set('sort-by', sortBy);
+        window.location.search = params.toString();
+        return false;
+    }
+
+    function setSortDirectionAsc(asc) {
+        params.set('sort-direction-asc', asc);
+        window.location.search = params.toString();
+        return false;
+    }
+
+    function clampViews() {
+        const maxViews = document.getElementById('max-views').value;
+        const minViews = document.getElementById('min-views').value;
+
+        if (maxViews) {
+            params.set('view-count-max', maxViews);
+        } else {
+            params.delete('view-count-max');
+        }
+
+        if (minViews) {
+            params.set('view-count-min', minViews);
+        } else {
+            params.delete('view-count-min');
+        }
+
+        window.location.search = params.toString();
+        return false;
+    }
+
+    function searchTitle() {
+        const titleLike = document.getElementById('title-like').value;
+
+        if (titleLike) {
+            params.set('title-like', titleLike);
+        } else {
+            params.delete('title-like');
+        }
+
+        window.location.search = params.toString();
+        return false;
+    }
+
+    function filterByBroadcaster(broadcasterName) {
+        params.set('broadcaster-name', broadcasterName);
+        window.location.search = params.toString();
+        return false;
+    }
+
+    function addLangsToFilter(langs) {
+        const currentLangs = params.get('langs').split(',');
+        const newLangs = [...new Set([...currentLangs, ...langs])];
+        params.set('langs', newLangs);
+        window.location.search = params.toString();
+        return false;
+    }
+
+    function removeLangsFromFilter(langs) {
+        const currentLangs = params.get('langs').split(',');
+        const newLangs = currentLangs.filter((lang) => !langs.includes(lang));
+        params.set('langs', newLangs);
+        window.location.search = params.toString();
+        return false;
+    }
+
+    function onEnter(el, cb) {
+        el.addEventListener("keypress", (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                cb();
+            }
+        });
+    }
+
+    onEnter(document.getElementById('title-like'), searchTitle);
+    onEnter(document.getElementById('min-views'), clampViews);
+    onEnter(document.getElementById('max-views'), clampViews);
+</script>
 
 <style>
     .listing {
@@ -46,11 +267,11 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        margin: 0.5rem;
+        margin: 0.25rem;
     }
 
     .item span img {
-        width: 250px;
+        width: 333px;
         margin-bottom: 0.5rem;
     }
 
@@ -58,10 +279,6 @@
         text-align: center;
     }
 </style>
-
-<script type="text/javascript">
-    {{!-- TODO: query parameters --}}
-</script>
 
 {{/inline}}
 {{> (lookup this "parent")}}
