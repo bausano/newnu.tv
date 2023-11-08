@@ -74,7 +74,7 @@ pub async fn show(
                 game_id: game_id.to_string(),
                 page_size: *page_size as i64,
                 page_offset: *page_offset as i64,
-                sort_direction_asc: sort_direction_asc.clone(),
+                sort_direction_asc: *sort_direction_asc,
                 broadcaster_name: broadcaster_name.clone(),
                 title_like: title_like.clone(),
                 langs: langs.clone(),
