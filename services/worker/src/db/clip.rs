@@ -170,7 +170,7 @@ mod tests {
                 game_id: "55".to_string(),
                 page_size: 5,
                 sort_by: rpc::ListClipsSortBy::RecordedAt as i32,
-                sort_direction_asc: false,
+                sort_direction_asc: true,
                 ..Default::default()
             },
         )?;
@@ -192,7 +192,7 @@ mod tests {
                 game_id: "55".to_string(),
                 page_size: 1,
                 sort_by: rpc::ListClipsSortBy::RecordedAt as i32,
-                sort_direction_asc: true,
+                sort_direction_asc: false,
                 ..Default::default()
             },
         )?;
@@ -213,7 +213,7 @@ mod tests {
                 game_id: "55".to_string(),
                 page_size: 2,
                 sort_by: rpc::ListClipsSortBy::ViewCount as i32,
-                sort_direction_asc: false,
+                sort_direction_asc: true,
                 ..Default::default()
             },
         )?;
@@ -235,7 +235,7 @@ mod tests {
                 game_id: "55".to_string(),
                 page_size: 2,
                 sort_by: rpc::ListClipsSortBy::ViewCount as i32,
-                sort_direction_asc: true,
+                sort_direction_asc: false,
                 view_count_max: Some(1500),
                 view_count_min: 500,
                 ..Default::default()
@@ -280,7 +280,7 @@ mod tests {
                 page_size: 1,
                 page_offset: 1,
                 sort_by: rpc::ListClipsSortBy::RecordedAt as i32,
-                sort_direction_asc: false,
+                sort_direction_asc: true,
                 ..Default::default()
             },
         )?;
@@ -344,6 +344,7 @@ mod tests {
                 game_id: "55".to_string(),
                 page_size: 2,
                 broadcaster_name: Some("Davaeorn".to_string()),
+                sort_direction_asc: true,
                 ..Default::default()
             },
         )?;
