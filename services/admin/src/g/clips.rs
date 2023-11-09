@@ -31,6 +31,12 @@ pub struct ShowParams {
     pub view_count_max: Option<usize>,
     #[serde(default)]
     pub view_count_min: usize,
+    #[serde(default)]
+    #[serde(deserialize_with = "g::empty_string_is_none")]
+    pub min_recorded_at: Option<String>,
+    #[serde(default)]
+    #[serde(deserialize_with = "g::empty_string_is_none")]
+    pub max_recorded_at: Option<String>,
 }
 
 fn default_page_size() -> usize {

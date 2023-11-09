@@ -94,7 +94,7 @@ impl Worker for RpcWorker {
         &self,
         request: Request<rpc::ListClipsRequest>,
     ) -> StdResult<Response<rpc::ListClipsResponse>, Status> {
-        debug!("List clips request {request:?}");
+        trace!("List clips request {request:?}");
 
         let db = self.g.db.lock().await;
         let (total_count, clips) = db::clip::list(&db, request.into_inner())?;

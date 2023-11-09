@@ -35,7 +35,6 @@ Simple no-css handlebar templates.
 
 # To do
 
-- clamp clips by date
 - label data with whisper and gpt
 - given context and clip, cluster clip with respect to context
   - the transcribed text is then vectorized
