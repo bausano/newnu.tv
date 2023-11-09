@@ -9,6 +9,8 @@ Available query parameters:
 - sort_by               (default: view_count)
 - view_count_max        (default: None)
 - view_count_min        (default: 0)
+- min_recorded_at       (default: None)
+- max_recorded_at       (default: None)
 --}}
 
 {{#*inline "page"}}
@@ -81,6 +83,27 @@ Available query parameters:
             id="title-like"
             value="{{ query.title_like }}"
         >
+    </li>
+
+    <li>
+        <a onclick="filterByDatetime()">Only clips recorded</a>
+        between
+        <input
+            type="datetime-local"
+            name="min-recorded-at"
+            id="min-recorded-at"
+            value="{{ query.min_recorded_at }}">
+        &#40;<a
+            onclick="return setMinRecordedAtInputToDayAgo()"
+            title="Only show clips recorded in the past day"
+        >last 24h</a>&#41;
+        and
+        <input
+            type="datetime-local"
+            name="max-recorded-at"
+            id="max-recorded-at"
+            value="{{ query.max_recorded_at }}">
+        &#40;<a onclick="return setMaxRecordedAtInputToNow()">now</a>&#41;
     </li>
 
     {{#if query.broadcaster_name }}
@@ -218,7 +241,7 @@ Available query parameters:
     }
 
     function addLangsToFilter(langs) {
-        const currentLangs = params.get('langs').split(',');
+        const currentLangs = (params.get('langs') || '').split(',');
         const newLangs = [...new Set([...currentLangs, ...langs])];
         params.set('langs', newLangs);
         window.location.search = params.toString();
@@ -226,10 +249,45 @@ Available query parameters:
     }
 
     function removeLangsFromFilter(langs) {
-        const currentLangs = params.get('langs').split(',');
+        const currentLangs = (params.get('langs') || '').split(',');
         const newLangs = currentLangs.filter((lang) => !langs.includes(lang));
         params.set('langs', newLangs);
         window.location.search = params.toString();
+        return false;
+    }
+
+    function filterByDatetime() {
+        const minRecordedAt = document.getElementById('min-recorded-at').value;
+        const maxRecordedAt = document.getElementById('max-recorded-at').value;
+
+        if (minRecordedAt) {
+            params.set('min-recorded-at', minRecordedAt);
+        } else {
+            params.delete('min-recorded-at');
+        }
+
+        if (maxRecordedAt) {
+            params.set('max-recorded-at', maxRecordedAt);
+        } else {
+            params.delete('max-recorded-at');
+        }
+
+        window.location.search = params.toString();
+        return false;
+    }
+
+    function setMaxRecordedAtInputToNow() {
+        const now = new Date();
+        const nowStr = now.toISOString().slice(0, 16);
+        document.getElementById('max-recorded-at').value = nowStr;
+        return false;
+    }
+
+    function setMinRecordedAtInputToDayAgo() {
+        const now = new Date();
+        const dayAgo = new Date(now - 24 * 60 * 60 * 1000);
+        const dayAgoStr = dayAgo.toISOString().slice(0, 16);
+        document.getElementById('min-recorded-at').value = dayAgoStr;
         return false;
     }
 
@@ -245,6 +303,8 @@ Available query parameters:
     onEnter(document.getElementById('title-like'), searchTitle);
     onEnter(document.getElementById('min-views'), clampViews);
     onEnter(document.getElementById('max-views'), clampViews);
+    onEnter(document.getElementById('min-recorded-at'), filterByDatetime);
+    onEnter(document.getElementById('max-recorded-at'), filterByDatetime);
 </script>
 
 <style>

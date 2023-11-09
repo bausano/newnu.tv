@@ -65,6 +65,8 @@ pub async fn show(
         sort_by,
         view_count_max,
         view_count_min,
+        min_recorded_at,
+        max_recorded_at,
     } = &query;
 
     let (total_count, clips) = {
@@ -81,6 +83,8 @@ pub async fn show(
                 sort_by: worker::rpc::ListClipsSortBy::from(*sort_by).into(),
                 view_count_max: view_count_max.map(|v| v as i64),
                 view_count_min: *view_count_min as i64,
+                min_recorded_at: min_recorded_at.clone(),
+                max_recorded_at: max_recorded_at.clone(),
             })
             .await?
             .into_inner();

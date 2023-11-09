@@ -10,14 +10,16 @@ pub fn list(
     request: rpc::ListClipsRequest,
 ) -> Result<(usize, Vec<Clip>)> {
     let rpc::ListClipsRequest {
-        game_id,
-        page_size,
-        page_offset,
-        sort_direction_asc,
         broadcaster_name,
-        title_like,
+        game_id,
         langs,
+        max_recorded_at,
+        min_recorded_at,
+        page_offset,
+        page_size,
         sort_by,
+        sort_direction_asc,
+        title_like,
         view_count_max,
         view_count_min,
     } = request;
@@ -51,13 +53,17 @@ pub fn list(
         AND (:title_like IS NULL OR title LIKE '%' || :title_like || '%')
         AND (:skip_langs OR lang IN rarray(:langs))
         AND (:view_count_max IS NULL OR view_count <= :view_count_max)
-        AND view_count >= :view_count_min";
+        AND view_count >= :view_count_min
+        AND (:min_recorded_at IS NULL OR recorded_at >= :min_recorded_at)
+        AND (:max_recorded_at IS NULL OR recorded_at <= :max_recorded_at)";
 
     let total_count_sql = format!("SELECT COUNT(*) FROM clips {where_clause}");
     let params = named_params! {
         ":broadcaster_name": broadcaster_name,
         ":game_id": game_id,
         ":langs": langs,
+        ":max_recorded_at": max_recorded_at,
+        ":min_recorded_at": min_recorded_at,
         ":skip_langs": langs.is_empty(),
         ":title_like": title_like,
         ":view_count_max": view_count_max,
@@ -93,6 +99,8 @@ pub fn list(
         ":broadcaster_name": broadcaster_name,
         ":game_id": game_id,
         ":langs": langs,
+        ":max_recorded_at": max_recorded_at,
+        ":min_recorded_at": min_recorded_at,
         ":page_offset": page_offset,
         ":page_size": page_size,
         ":skip_langs": langs.is_empty(),

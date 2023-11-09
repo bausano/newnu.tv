@@ -66,6 +66,10 @@ message ListClipsRequest {
   optional int64 view_count_max = 9;
   // Bound view count by lower limit.
   int64 view_count_min = 10;
+  // A most this old. ISO 8601
+  optional string min_recorded_at = 11;
+  // A least this old. ISO 8601
+  optional string max_recorded_at = 12;
 }
 enum ListClipsSortBy {
   RECORDED_AT = 0;

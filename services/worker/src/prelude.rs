@@ -1,5 +1,5 @@
 pub(crate) use anyhow::{Error as AnyError, Result as AnyResult};
-pub(crate) use log::{debug, error, info, warn};
+pub(crate) use log::{debug, error, info, trace, warn};
 pub(crate) use std::result::Result as StdResult;
 
 pub(crate) use crate::conf::Conf;
