@@ -60,15 +60,6 @@ impl From<AnyError> for AppError {
     }
 }
 
-impl From<rusqlite::Error> for AppError {
-    fn from(err: rusqlite::Error) -> Self {
-        Self {
-            message: err.to_string().into(),
-            kind: AppErrorKind::Other,
-        }
-    }
-}
-
 impl From<AppError> for tonic::Status {
     fn from(err: AppError) -> Self {
         let code = match err.kind {

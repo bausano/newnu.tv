@@ -1,5 +1,3 @@
-pub mod models;
-
 pub mod rpc {
     tonic::include_proto!("worker");
 }

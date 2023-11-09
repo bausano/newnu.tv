@@ -1,17 +1,12 @@
 mod conf;
-mod db;
 mod error;
 mod g;
-mod job;
-/// Models which are shared also by the admin interface.
-mod models;
 mod prelude;
 mod service;
 
 use crate::prelude::*;
 use rpc::worker_server::WorkerServer;
 use std::sync::Arc;
-use tokio::sync::Mutex;
 use tonic::transport::Server;
 
 mod rpc {
@@ -30,13 +25,9 @@ async fn main() -> AnyResult<()> {
     info!("worker starting");
 
     let conf = Conf::from_env()?;
-    let twitch = Arc::new(conf.construct_twitch_client().await?);
-    let db = Arc::new(Mutex::new(db::open(conf.db_path())?));
 
     let g = AppState {
-        db: Arc::clone(&db),
         conf: Arc::new(conf),
-        twitch: Arc::clone(&twitch),
     };
 
     let addr = g.conf.rpc_addr;

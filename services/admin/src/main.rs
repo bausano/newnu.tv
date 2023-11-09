@@ -10,6 +10,8 @@ mod g;
 mod http;
 /// Cron job scheduling.
 mod job;
+/// Global structs and their implementation
+mod models;
 /// Global imports of ubiquitous types
 mod prelude;
 /// Http templates with handlebars
@@ -29,19 +31,19 @@ async fn main() -> AnyResult<()> {
 
     let conf = Conf::from_env()?;
     let worker = Arc::new(Mutex::new(conf.connect_lazy_worker_client().await?));
-    let twitch = conf.construct_twitch_client().await?;
-    let mut db = conf.open_db()?;
+    let tc = Arc::new(conf.construct_twitch_client().await?);
+    let mut db = db::open(conf.db_path())?;
     db::up(&mut db)?;
     let db = Arc::new(Mutex::new(db));
 
-    let jobs = job::schedule_all(Arc::clone(&db), Arc::clone(&worker)).await?;
+    let jobs = job::schedule_all(Arc::clone(&db), Arc::clone(&tc)).await?;
 
     let g = g::HttpState {
         conf: Arc::new(conf),
         db,
         worker,
         views: Views::new()?,
-        twitch: Arc::new(twitch),
+        twitch: tc,
         _jobs: jobs,
     };
 

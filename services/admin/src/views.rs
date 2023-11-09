@@ -113,8 +113,8 @@ impl Views {
         db: &DbConn,
         game_id: &GameId,
         total_count: usize,
-        clips: Vec<worker::models::clip::Clip>,
-        query: g::clips::ShowParams,
+        clips: Vec<models::clip::Clip>,
+        query: models::clip::ShowParams,
     ) -> Result<Html<String>> {
         let game = db::game::select_by_id(db, game_id)?;
 

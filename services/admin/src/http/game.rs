@@ -37,16 +37,6 @@ pub async fn add(
         )));
     };
 
-    {
-        let mut worker = s.worker.lock().await;
-        worker
-            .add_game(worker::rpc::AddGameRequest {
-                game_id: game_id.to_string(),
-                game_name: game.name.clone(),
-            })
-            .await?;
-    }
-
     let db = s.db.lock().await;
     db::game::insert(&db, &game)?;
 
@@ -57,15 +47,6 @@ pub async fn delete(
     State(s): State<g::HttpState>,
     Path(game_id): Path<twitch::models::GameId>,
 ) -> Result<Redirect> {
-    {
-        let mut worker = s.worker.lock().await;
-        worker
-            .delete_game(worker::rpc::DeleteGameRequest {
-                game_id: game_id.to_string(),
-            })
-            .await?;
-    }
-
     let db = s.db.lock().await;
     db::game::delete(&db, &game_id)?;
 
@@ -95,16 +76,6 @@ async fn set_is_paused(
     game_id: twitch::models::GameId,
     is_paused: bool,
 ) -> Result<()> {
-    {
-        let mut worker = s.worker.lock().await;
-        worker
-            .set_is_game_paused(worker::rpc::SetIsGamePausedRequest {
-                game_id: game_id.to_string(),
-                is_paused,
-            })
-            .await?;
-    }
-
     let db = s.db.lock().await;
     db::game::set_is_paused(&db, &game_id, is_paused)?;
 

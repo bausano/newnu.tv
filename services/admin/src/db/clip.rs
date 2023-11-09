@@ -1,17 +1,18 @@
 use itertools::Itertools;
 use rusqlite::named_params;
 use std::{rc::Rc, time::Duration};
+use twitch::models::GameId;
 
-use crate::models::clip::Clip;
-use crate::{prelude::*, rpc};
+use crate::models::clip::{Clip, ShowParams};
+use crate::prelude::*;
 
 pub fn list(
     db: &DbConn,
-    request: rpc::ListClipsRequest,
+    game_id: &GameId,
+    request: &ShowParams,
 ) -> Result<(usize, Vec<Clip>)> {
-    let rpc::ListClipsRequest {
+    let ShowParams {
         broadcaster_name,
-        game_id,
         langs,
         max_recorded_at,
         min_recorded_at,
@@ -24,26 +25,19 @@ pub fn list(
         view_count_min,
     } = request;
 
-    if page_size == 0 {
+    if *page_size == 0 {
         return Err(AppError::bad_request(
             "page_size must be greater than 0".to_string(),
         ));
     }
 
-    let sort_by = {
-        let sort_by = rpc::ListClipsSortBy::try_from(sort_by).map_err(|e| {
-            AppError::internal(format!("Invalid sort order: {e}"))
-        })?;
-        match sort_by {
-            rpc::ListClipsSortBy::RecordedAt => "recorded_at",
-            rpc::ListClipsSortBy::ViewCount => "view_count",
-        }
-    };
-    let sort_direction = if sort_direction_asc { "ASC" } else { "DESC" };
+    let sort_by: &str = From::from(*sort_by);
+    let sort_direction = if *sort_direction_asc { "ASC" } else { "DESC" };
     // array feature of sqlite
     let langs = Rc::new(
         langs
             .into_iter()
+            .cloned()
             .map(rusqlite::types::Value::from)
             .collect_vec(),
     );
@@ -140,31 +134,12 @@ impl TryFrom<&rusqlite::Row<'_>> for Clip {
     }
 }
 
-impl From<Clip> for rpc::Clip {
-    fn from(clip: Clip) -> Self {
-        Self {
-            broadcaster_id: clip.broadcaster_id,
-            broadcaster_name: clip.broadcaster_name,
-            created_at: clip.created_at.to_rfc3339(),
-            creator_name: clip.creator_name,
-            thumbnail_url: clip.thumbnail_url,
-            game_id: clip.game_id,
-            id: clip.id,
-            lang: clip.lang,
-            recorded_at: clip.recorded_at.to_rfc3339(),
-            title: clip.title,
-            updated_at: clip.updated_at.to_rfc3339(),
-            url: clip.url,
-            view_count: clip.view_count as i64,
-            duration_secs: clip.duration.as_secs() as i64,
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     //! We have an SQL with some sample data in tests/assets/clips.sql.
     //! Load that data, insert it into in-memory sqlite.
+
+    use crate::models::clip::ShowSortBy;
 
     use super::*;
 
@@ -174,10 +149,10 @@ mod tests {
 
         let (total_count, clips) = list(
             &db,
-            rpc::ListClipsRequest {
-                game_id: "55".to_string(),
+            &GameId::from("55"),
+            &ShowParams {
                 page_size: 5,
-                sort_by: rpc::ListClipsSortBy::RecordedAt as i32,
+                sort_by: ShowSortBy::RecordedAt,
                 sort_direction_asc: true,
                 ..Default::default()
             },
@@ -196,10 +171,10 @@ mod tests {
 
         let (total_count, clips) = list(
             &db,
-            rpc::ListClipsRequest {
-                game_id: "55".to_string(),
+            &GameId::from("55"),
+            &ShowParams {
                 page_size: 1,
-                sort_by: rpc::ListClipsSortBy::RecordedAt as i32,
+                sort_by: ShowSortBy::RecordedAt,
                 sort_direction_asc: false,
                 ..Default::default()
             },
@@ -217,10 +192,10 @@ mod tests {
 
         let (total_count, clips) = list(
             &db,
-            rpc::ListClipsRequest {
-                game_id: "55".to_string(),
+            &GameId::from("55"),
+            &ShowParams {
                 page_size: 2,
-                sort_by: rpc::ListClipsSortBy::ViewCount as i32,
+                sort_by: ShowSortBy::ViewCount,
                 sort_direction_asc: true,
                 ..Default::default()
             },
@@ -239,10 +214,10 @@ mod tests {
 
         let (total_count, clips) = list(
             &db,
-            rpc::ListClipsRequest {
-                game_id: "55".to_string(),
+            &GameId::from("55"),
+            &ShowParams {
                 page_size: 2,
-                sort_by: rpc::ListClipsSortBy::ViewCount as i32,
+                sort_by: ShowSortBy::ViewCount,
                 sort_direction_asc: false,
                 view_count_max: Some(1500),
                 view_count_min: 500,
@@ -263,8 +238,8 @@ mod tests {
 
         let (total_count, clips) = list(
             &db,
-            rpc::ListClipsRequest {
-                game_id: "55".to_string(),
+            &GameId::from("55"),
+            &ShowParams {
                 title_like: Some("pytlik".to_string()),
                 page_size: 1,
                 ..Default::default()
@@ -283,11 +258,11 @@ mod tests {
 
         let (total_count, clips) = list(
             &db,
-            rpc::ListClipsRequest {
-                game_id: "55".to_string(),
+            &GameId::from("55"),
+            &ShowParams {
                 page_size: 1,
                 page_offset: 1,
-                sort_by: rpc::ListClipsSortBy::RecordedAt as i32,
+                sort_by: ShowSortBy::RecordedAt,
                 sort_direction_asc: true,
                 ..Default::default()
             },
@@ -305,8 +280,8 @@ mod tests {
 
         let (total_count, clips) = list(
             &db,
-            rpc::ListClipsRequest {
-                game_id: "55".to_string(),
+            &GameId::from("55"),
+            &ShowParams {
                 page_size: 10,
                 langs: vec!["en".to_string()],
                 ..Default::default()
@@ -317,8 +292,8 @@ mod tests {
 
         let (total_count, clips) = list(
             &db,
-            rpc::ListClipsRequest {
-                game_id: "55".to_string(),
+            &GameId::from("55"),
+            &ShowParams {
                 page_size: 10,
                 langs: vec!["nl".to_string()],
                 ..Default::default()
@@ -329,8 +304,8 @@ mod tests {
 
         let (total_count, clips) = list(
             &db,
-            rpc::ListClipsRequest {
-                game_id: "55".to_string(),
+            &GameId::from("55"),
+            &ShowParams {
                 page_size: 10,
                 langs: vec!["nl".to_string(), "cs".to_string()],
                 ..Default::default()
@@ -348,11 +323,12 @@ mod tests {
 
         let (total_count, clips) = list(
             &db,
-            rpc::ListClipsRequest {
-                game_id: "55".to_string(),
+            &GameId::from("55"),
+            &ShowParams {
                 page_size: 2,
                 broadcaster_name: Some("Davaeorn".to_string()),
                 sort_direction_asc: true,
+                sort_by: ShowSortBy::RecordedAt,
                 ..Default::default()
             },
         )?;

@@ -6,21 +6,15 @@ edition.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-chrono.workspace = true
 dotenvy.workspace = true
 hyper.workspace = true
-itertools.workspace = true
 log.workspace = true
 pretty_env_logger.workspace = true
 prost = "0.12"
-rand.workspace = true
-rusqlite_migration.workspace = true
-rusqlite.workspace = true
 serde_json.workspace = true
 serde.workspace = true
 tokio.workspace = true
 tonic.workspace = true
-twitch = { path = "../../crates/twitch" }
 
 [build-dependencies]
 tonic-build = "0.10"

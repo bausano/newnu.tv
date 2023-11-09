@@ -1,6 +1,7 @@
+pub mod fetch_new_game_clips;
+
 use anyhow::anyhow;
 use std::sync::Arc;
-use tokio::sync::Mutex;
 use tokio_cron_scheduler::{Job, JobScheduler};
 
 use crate::prelude::*;
@@ -13,16 +14,17 @@ pub struct Jobs {
 
 pub async fn schedule_all(
     db: DbLock,
-    worker: Arc<Mutex<worker::Client>>,
+    tc: Arc<twitch::Client>,
 ) -> AnyResult<Jobs> {
     let mut scheduler = JobScheduler::new().await?;
 
-    let db = db.lock().await;
-    let fetch_new_game_clips_cron =
-        db::setting::fetch_new_game_clips_cron(&db)?;
-    let recorded_at_least_hours_ago =
-        db::setting::recorded_at_least_hours_ago(&db)?;
-    drop(db);
+    let (fetch_new_game_clips_cron, recorded_at_least_ago) = {
+        let db = db.lock().await;
+        let new_clips_cron = db::setting::fetch_new_game_clips_cron(&db)?;
+        let at_least_ago = db::setting::recorded_at_least_hours_ago(&db)?;
+
+        (new_clips_cron, Some(chrono::Duration::hours(at_least_ago)))
+    };
 
     let fetch_new_game_clips = scheduler
         .add(Job::new_async(
@@ -30,19 +32,19 @@ pub async fn schedule_all(
             move |_, _| {
                 debug!("Triggering fetch_new_game_clips");
 
-                let worker = Arc::clone(&worker);
+                let db = Arc::clone(&db);
+                let tc = Arc::clone(&tc);
+
                 Box::pin(async move {
-                    let res = worker
-                        .lock()
-                        .await
-                        .trigger_fetch_new_game_clips(
-                            worker::rpc::TriggerFetchNewGameClipsRequest {
-                                game_id: None,                 // for all
-                                recorded_at_most_hours_ago: 0, // last clip
-                                recorded_at_least_hours_ago,
-                            },
-                        )
-                        .await;
+                    let res = fetch_new_game_clips::once_for_all(
+                        Arc::clone(&db),
+                        Arc::clone(&tc),
+                        fetch_new_game_clips::Conf {
+                            recorded_at_most_ago: None, // last clip
+                            recorded_at_least_ago,
+                        },
+                    )
+                    .await;
                     if let Err(e) = res {
                         error!("Cannot trigger fetching new game clips: {e}");
                     }

@@ -1,7 +1,10 @@
-use anyhow::Context;
-
 use crate::prelude::*;
-use std::{env, net::SocketAddr, path::PathBuf};
+use anyhow::Context;
+use std::{
+    env,
+    net::SocketAddr,
+    path::{Path, PathBuf},
+};
 
 pub struct Conf {
     /// For example 0.0.0.0:8080
@@ -51,8 +54,8 @@ impl Conf {
         })
     }
 
-    pub fn open_db(&self) -> AnyResult<DbConn> {
-        DbConn::open(&self.sqlite_db_path).map_err(From::from)
+    pub fn db_path(&self) -> &Path {
+        self.sqlite_db_path.as_ref()
     }
 
     /// The worker does not have to be running for this to succeed.

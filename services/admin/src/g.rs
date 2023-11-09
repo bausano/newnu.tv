@@ -1,5 +1,3 @@
-pub mod clips;
-
 use crate::job::Jobs;
 use crate::prelude::*;
 use crate::views::Views;

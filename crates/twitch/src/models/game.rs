@@ -37,6 +37,12 @@ impl From<String> for GameId {
     }
 }
 
+impl From<&str> for GameId {
+    fn from(s: &str) -> Self {
+        Self(s.to_string())
+    }
+}
+
 impl From<GameId> for String {
     fn from(g: GameId) -> Self {
         g.0

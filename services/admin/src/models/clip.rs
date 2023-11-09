@@ -1,14 +1,16 @@
 use crate::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 
-#[derive(Deserialize, Serialize, Debug, Clone, Copy)]
+#[derive(Deserialize, Serialize, Debug, Clone, Copy, Default)]
 #[serde(rename_all(deserialize = "kebab-case", serialize = "snake_case"))]
 pub enum ShowSortBy {
     RecordedAt,
+    #[default]
     ViewCount,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(rename_all(deserialize = "kebab-case", serialize = "snake_case"))]
 pub struct ShowParams {
     #[serde(default = "default_page_size")]
@@ -39,6 +41,24 @@ pub struct ShowParams {
     pub max_recorded_at: Option<String>,
 }
 
+#[derive(Debug, Serialize)]
+pub struct Clip {
+    pub broadcaster_id: String,
+    pub broadcaster_name: String,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub creator_name: String,
+    pub duration: Duration,
+    pub game_id: String,
+    pub id: String,
+    pub lang: String,
+    pub recorded_at: chrono::DateTime<chrono::Utc>,
+    pub thumbnail_url: String,
+    pub title: String,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
+    pub url: String,
+    pub view_count: usize,
+}
+
 fn default_page_size() -> usize {
     50
 }
@@ -46,11 +66,11 @@ fn default_sort_by() -> ShowSortBy {
     ShowSortBy::ViewCount
 }
 
-impl From<ShowSortBy> for worker::rpc::ListClipsSortBy {
+impl From<ShowSortBy> for &'static str {
     fn from(s: ShowSortBy) -> Self {
         match s {
-            ShowSortBy::RecordedAt => worker::rpc::ListClipsSortBy::RecordedAt,
-            ShowSortBy::ViewCount => worker::rpc::ListClipsSortBy::ViewCount,
+            ShowSortBy::RecordedAt => "recorded_at",
+            ShowSortBy::ViewCount => "view_count",
         }
     }
 }

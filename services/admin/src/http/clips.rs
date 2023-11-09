@@ -4,6 +4,7 @@ use axum::{
     Form,
 };
 use serde::Deserialize;
+use std::sync::Arc;
 
 use crate::prelude::*;
 
@@ -36,16 +37,23 @@ pub async fn trigger_fetch(
         last {at_most} hours, at least {at_least} hours ago"
     );
 
-    let mut worker = s.worker.lock().await;
-    worker
-        .trigger_fetch_new_game_clips(
-            worker::rpc::TriggerFetchNewGameClipsRequest {
-                game_id: Some(game_id.to_string()),
-                recorded_at_most_hours_ago: at_most as i64,
-                recorded_at_least_hours_ago: at_least as i64,
+    tokio::spawn(crate::job::fetch_new_game_clips::once(
+        Arc::clone(&s.db),
+        Arc::clone(&s.twitch),
+        crate::job::fetch_new_game_clips::Conf {
+            recorded_at_most_ago: if at_most == 0 {
+                None
+            } else {
+                Some(chrono::Duration::hours(at_most as i64))
             },
-        )
-        .await?;
+            recorded_at_least_ago: if at_least == 0 {
+                None
+            } else {
+                Some(chrono::Duration::hours(at_least as i64))
+            },
+        },
+        game_id.clone(),
+    ));
 
     Ok(Redirect::to(&format!("/game/{game_id}")))
 }
@@ -53,49 +61,11 @@ pub async fn trigger_fetch(
 pub async fn show(
     State(s): State<g::HttpState>,
     Path(game_id): Path<twitch::models::GameId>,
-    Query(query): Query<g::clips::ShowParams>,
+    Query(query): Query<models::clip::ShowParams>,
 ) -> Result<Html<String>> {
-    let g::clips::ShowParams {
-        page_size,
-        page_offset,
-        sort_direction_asc,
-        broadcaster_name,
-        title_like,
-        langs,
-        sort_by,
-        view_count_max,
-        view_count_min,
-        min_recorded_at,
-        max_recorded_at,
-    } = &query;
-
-    let (total_count, clips) = {
-        let mut worker = s.worker.lock().await;
-        let worker::rpc::ListClipsResponse { total_count, clips } = worker
-            .list_clips(worker::rpc::ListClipsRequest {
-                game_id: game_id.to_string(),
-                page_size: *page_size as i64,
-                page_offset: *page_offset as i64,
-                sort_direction_asc: *sort_direction_asc,
-                broadcaster_name: broadcaster_name.clone(),
-                title_like: title_like.clone(),
-                langs: langs.clone(),
-                sort_by: worker::rpc::ListClipsSortBy::from(*sort_by).into(),
-                view_count_max: view_count_max.map(|v| v as i64),
-                view_count_min: *view_count_min as i64,
-                min_recorded_at: min_recorded_at.clone(),
-                max_recorded_at: max_recorded_at.clone(),
-            })
-            .await?
-            .into_inner();
-        let clips = clips
-            .into_iter()
-            .map(TryFrom::try_from)
-            .collect::<AnyResult<Vec<_>>>()?;
-
-        (total_count as usize, clips)
-    };
-
     let db = s.db.lock().await;
+
+    let (total_count, clips) = db::clip::list(&db, &game_id, &query)?;
+
     s.views.clips(&db, &game_id, total_count, clips, query)
 }
